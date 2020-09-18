@@ -5,13 +5,6 @@ die() {
 	exit 1
 }
 
-getTrueHost() {
-	IP=$(host $1 |tail -n 1 |awk '/has address/ { print $4 }')
-	CERTDOMAIN=$(curl -vI https://$1:$2 2>&1 |grep CN= |sed s/[^\\*]*CN=\\*//g |sed s/\*//g)
-	NEWROOT=$(echo $IP |sed 's/\./-/g')
-	echo ${NEWROOT}${CERTDOMAIN}
-}
-
 export PATH=/usr/local/bin:$PATH
 
 aryname=''
@@ -59,14 +52,12 @@ for SERVER in $arraylist; do
 	eval 'PLEXPORT2=${'$SERVER'[''PORT2'']}'
 	eval 'PLEXTOKEN2=${'$SERVER'[''TOKEN2'']}'
 	eval 'PLEXSECTIONS=${'$SERVER'[''SECTIONS'']}'
-	PLEXTRUEHOST1=$(getTrueHost $PLEXHOST1 $PLEXPORT1)
-	PLEXTRUEHOST2=$(getTrueHost $PLEXHOST2 $PLEXPORT2)
 	IFS='|'
 	for SECTIONMAP in $PLEXSECTIONS; do
 		PLEXSECTION1=${SECTIONMAP%%:*}
 		PLEXSECTION2=${SECTIONMAP##*:}
-		echo "Syncing $SERVER - ${PLEXTRUEHOST1}(${PLEXHOST1}):${PLEXPORT1}/${PLEXSECTION1} -> ${PLEXTRUEHOST2}(${PLEXHOST2}):${PLEXPORT2}/${PLEXSECTION2}..."
-		FULLCMD="$CMDLINE plex-sync https://${PLEXTOKEN1}@${PLEXTRUEHOST1}:${PLEXPORT1}/${PLEXSECTION1} https://${PLEXTOKEN2}@${PLEXTRUEHOST2}:${PLEXPORT2}/${PLEXSECTION2}"
+		echo "Syncing $SERVER - ${PLEXTOKEN1}(${PLEXHOST1}):${PLEXPORT1}/${PLEXSECTION1} -> ${PLEXTOKEN2}(${PLEXHOST2}):${PLEXPORT2}/${PLEXSECTION2}..."
+		FULLCMD="$CMDLINE plex-sync ${PLEXTOKEN1}@${PLEXHOST1}:${PLEXPORT1}/${PLEXSECTION1} ${PLEXTOKEN2}@${PLEXHOST2}:${PLEXPORT2}/${PLEXSECTION2}"
 		FULLCMD=$(echo $FULLCMD)
 		eval $FULLCMD
 
